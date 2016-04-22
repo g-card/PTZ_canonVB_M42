@@ -1,18 +1,10 @@
-#include <opencv2/core/utility.hpp>
-#include "opencv2/video/tracking.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/videoio.hpp"
-#include "opencv2/highgui.hpp"
-#include <opencv2/video.hpp>
-#include <string>
-#include <stdlib.h>
-#include <curl/curl.h>
-#include <vector>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/video/tracking.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/video/background_segm.hpp>
 #include "pid.cpp"
-
-#include <iostream>
+#include "canon_cmd.cpp"
 #include <ctype.h>
 
 using namespace cv;
@@ -30,188 +22,7 @@ Point origin;
 Rect selection;
 int vmin = 10, vmax = 256, smin = 30;
 
-using namespace boost;
-std::string cam_addr="http://192.168.0.100/-wvhttp-01-/";
 
-static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-    ((string*)userp)->append((char*)contents, size * nmemb);
-    return size * nmemb;
-}
-
-//Envoi de la commande, TODO retourner d'autres valeurs (erreurs,depassements...)
-
-int cmd_pan(std::string id,float pan)
-{
-  CURL *curl;
-  CURLcode out;
-  curl = curl_easy_init();
-  int p;
-  std::string cmd_url,buff;
-  
-  //bornes du pan (pas obligatoire car bornage déjà fait sur la camera
-  if(pan<-170)
-    pan=-170;
-  if(pan>170)
-    pan=170;
-  //formatage de l'info du pan
-  p=int(pan*100);
-  //url necessaire pour controler le pan
-  cmd_url=cam_addr+"control.cgi?s="+id+"&pan="+ lexical_cast <string>(p);
-  if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, cmd_url.c_str());
-    out = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-  }
-  return 0;
-}
-
-
-//Pareil qu'avec le pan
-int cmd_tilt(std::string id,float tilt)
-{
-  CURL *curl;
-  CURLcode out;
-  curl = curl_easy_init();
-  int t;
-  std::string cmd_url,buff;
-  
-  
-  //si non inversée, [-90;10], si inversée [90;-10]
-  if(tilt<-10)
-    tilt=-10;
-  if(tilt>90)
-    tilt=90;
-  t=int(tilt*100);
-  
-  cmd_url=cam_addr+"control.cgi?s="+id+"&tilt="+ lexical_cast <string>(t);
-  if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, cmd_url.c_str());
-    out = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-  }
-  return 0;
-}
-float get_pan()
-{
-  CURL *curl;
-  CURLcode out;
-  curl = curl_easy_init();
-  std::string get_url,buff;
-  vector<string> champ;
-  
-  get_url=cam_addr+"GetCameraInfo";
-  if(curl){//ouverture du l url donnant l id de la camera
-    curl_easy_setopt(curl, CURLOPT_URL, get_url.c_str());
-    //ecriture du retour dans readBuffer
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buff);
-    //acces url
-    
-    out = curl_easy_perform(curl);
-    split(champ,buff,is_any_of("\n"));
-    split(champ,champ[3],is_any_of("="));
-    return(lexical_cast <float>(champ[1])/100);
-  }
-    return(800);
-  
-}
-
-float get_tilt()
-{
-  CURL *curl;
-  CURLcode out;
-  curl = curl_easy_init();
-  std::string get_url,buff;
-  vector<string> champ;
-  
-  get_url=cam_addr+"GetCameraInfo";
-  if(curl){//ouverture du l url donnant l id de la camera
-    curl_easy_setopt(curl, CURLOPT_URL, get_url.c_str());
-    //ecriture du retour dans readBuffer
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buff);
-    //acces url
-    out = curl_easy_perform(curl);
-    split(champ,buff,is_any_of("\n"));
-    split(champ,champ[4],is_any_of("="));
-    return(lexical_cast <float>(champ[1])/100);
-  }
-    return(800);
-  
-}
-int cmd(float pan,float tilt,std::string id)
-{
-  CURL *curl;
-  CURLcode res;
-  std::string readBuffer,url_claim,url_yield;
-  
-  curl = curl_easy_init();
-  if(curl) {
-    url_claim=cam_addr+"claim.cgi?s="+id;
-    curl_easy_setopt(curl, CURLOPT_URL, url_claim.c_str());
-    res = curl_easy_perform(curl);
-    //modif pan/tilt
-
-    int c=cmd_pan(id,pan);
-    c=cmd_tilt(id,tilt);
-    
-    url_yield=cam_addr+"yield.cgi?s="+id;
-    curl_easy_setopt(curl, CURLOPT_URL, url_yield.c_str());
-    res = curl_easy_perform(curl);
-        
-  curl_easy_cleanup(curl);
-  }
-  return 0;
-}
-int close_camera(std::string id)
-{
-  CURL *curl;
-  CURLcode res;
-  std::string readBuffer,url_yield,url_close;
-  
-  curl = curl_easy_init();
-  if(curl) {
-    //rendre controle camera (obligatoire pour enchainer des commandes)
-    
-    url_close=cam_addr+"close.cgi?s="+id;
-    curl_easy_setopt(curl, CURLOPT_URL, url_close.c_str());
-    res = curl_easy_perform(curl);
-  }
-  return 0;
-}
-
-std::string open_camera()
-{
-  CURL *curl;
-  CURLcode res;
-  std::string readBuffer,url_claim,id,url_open;
-  vector <string> champs;
-  
-
-  curl = curl_easy_init();
-  url_open=cam_addr+"open.cgi";
-  if(curl) {
-    
-    //ouverture du l url donnant l id de la camera
-    curl_easy_setopt(curl, CURLOPT_URL, url_open.c_str());
-    //ecriture du retour dans readBuffer
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-    //acces url
-    res = curl_easy_perform(curl);
-    cout<<readBuffer<<endl;
-    
-    //on ne garde que l id
-    split(champs,readBuffer,is_any_of("\n"));
-    split(champs,champs[0],is_any_of("="));
-    id=champs[1];  
-    
-    
-    curl_easy_cleanup(curl);
-  }
-  return id;
-}
 
 static void onMouse( int event, int x, int y, int, void* )
 {
@@ -279,7 +90,7 @@ int main( int argc, const char** argv )
     std::string id;
     Mat frameM; //current frame
     Mat fgMaskMOG2; //fg mask fg mask generated by MOG2 method
-    Ptr<BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
+    BackgroundSubtractor pMOG2; //MOG2 Background subtractor
    const std::string videoStreamAddress = "http://192.168.0.100/-wvhttp-01-/video.cgi?.mjpg"; 
    cap.open(videoStreamAddress);
     if(!cap.isOpened()){
@@ -288,7 +99,7 @@ int main( int argc, const char** argv )
         exit(EXIT_FAILURE);
     }
 
-    id=open_camera();
+    canon_cmd camera_cmd;
     cout << hot_keys;
     //namedWindow( "Histogram", 0 );
     namedWindow( "CamShift Demo", 0 );
@@ -297,7 +108,7 @@ int main( int argc, const char** argv )
     createTrackbar( "Vmin", "CamShift Demo", &vmin, 256, 0 );
     createTrackbar( "Vmax", "CamShift Demo", &vmax, 256, 0 );
     createTrackbar( "Smin", "CamShift Demo", &smin, 256, 0 );
-    pMOG2 = createBackgroundSubtractorMOG2(500,50,false); //MOG2 approach
+    pMOG2 = BackgroundSubtractorMOG(500,50,false); //MOG2 approach
         //input data coming from a video
     
     
@@ -311,12 +122,12 @@ int main( int argc, const char** argv )
         if( !paused )
         {
             cap >> frame;
-	   // pMOG2->apply(frame, fgMaskMOG2,0.01);
+	   // pMOG2(frame, fgMaskMOG2,0.01);
 	  
             if( frame.empty() )
                 break;
         }
-        //pMOG2->getBackgroundImage(back);
+        //pMOG2.getBackgroundImage(back);
 	/*frame.copyTo(image);
 	printf("%d,%d\t%d,%d\t,%d,%d\n",fgMaskMOG2.rows,fgMaskMOG2.cols,frame.rows,frame.cols,image.rows,image.cols);
 	bitwise_and(frame,fgMaskMOG2,image);*/
@@ -377,7 +188,7 @@ int main( int argc, const char** argv )
 
                 //if( backprojMode )
                     cvtColor( backproj, image, COLOR_GRAY2BGR );
-                ellipse( image, trackBox, Scalar(0,0,255), 3, LINE_AA );
+                ellipse( image, trackBox, Scalar(0,0,255), 3 );
             }
         }
         else if( trackObject < 0 )
@@ -395,7 +206,7 @@ int main( int argc, const char** argv )
 	cout<<"Pos centre: "<<center<<endl;
 	
 	if(trackObject){
-	   cmd(get_pan()-cor_pan.calculate(640,center.x),get_tilt()+cor_tilt.calculate(360,center.y),id);
+	   camera_cmd.cmd(camera_cmd.get_pan()-cor_pan.calculate(640,center.x),camera_cmd.get_tilt()+cor_tilt.calculate(360,center.y));
 	   usleep(50000);
 	}  
 
