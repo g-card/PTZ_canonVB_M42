@@ -1,0 +1,40 @@
+<package>
+  <name>canon_vbm42</name>
+  <version>1.0.0</version>
+  <description>canon_vbm42</description>
+  <maintainer email="gregoire.cardone@univ-tlse3.fr">Gregoire Cardone</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/canon_vbm42</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Gregoire Cardone</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>driver_base</build_depend>
+  <build_depend>cv_bridge</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>driver_base</run_depend>
+  <run_depend>cv_bridge</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>roscpp</test_depend> -->
+  <!-- <test_depend>sensor_msgs</test_depend> -->
+  <!-- <test_depend>dynamic_reconfigure</test_depend> -->
+  <!-- <test_depend>image_transport</test_depend> -->
+  <!-- <test_depend>driver_base</test_depend> -->
+
+</package>
