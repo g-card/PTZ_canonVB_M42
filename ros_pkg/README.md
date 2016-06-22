@@ -3,3 +3,5 @@
 This package contains:
 - a node which publishes the video stream and the parameters of the camera;
 - another node prompting the video using ```cv_bridge```
+
+Note: ```opencv3``` is required.
