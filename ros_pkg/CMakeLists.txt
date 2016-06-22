@@ -23,61 +23,19 @@ add_message_files(
   PTZ.msg
 )
 
+#message generation and dynamic reconf.
 generate_dynamic_reconfigure_options(cfg/CanonParams.cfg)
 generate_messages()
-
-# SET(USE_IPP no)
-# IF(USE_IPP MATCHES yes)
-# SET(IPP_INC xxx/xxx/xxx/include)
-# SET(IPP_LIBDIR xxx/xxx/xxx/sharedlib)
-# SET(IPP_LIBS ippjpeg ippj ippi ipps ippcore )
-# SET(IPP_DIR libIppJpeg)
-# SET(IPP_SRC JpegReader-ipp.cpp)
-# SET(IPP_DEF -DUSE_IPP)
-# SET(IPP_JPEG IppJpeg)
-# ENDIF(USE_IPP MATCHES yes)
 
 # catkin_package parameters: http://ros.org/doc/groovy/api/catkin/html/dev_guide/generated_cmake_api.html#catkin-package
 catkin_package(
     CATKIN_DEPENDS roscpp sensor_msgs dynamic_reconfigure image_transport driver_base cv_bridge
-    DEPENDS # TODO
-    INCLUDE_DIRS include/ ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}# TODO include
-  LIBRARIES ${Boost_LIBRARIES} ${OpenCV_LIBS}# TODO
+    DEPENDS
+    INCLUDE_DIRS include/ ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
+  LIBRARIES ${Boost_LIBRARIES} ${OpenCV_LIBS}
 )  
-# ADD_DEFINITIONS(${IPP_DEF})
-# 
-# #common commands for building c++ executables and libraries
- add_library(${PROJECT_NAME} 
-#     src/libSock/Socket.cpp
-#     src/libSock/SocketCom.cpp
-#     # src/libSock/Serializer.cpp
-     src/libCanon/CanonDriver.cpp
-#     src/libCanon/DgmQueue.cpp
-#     src/libCanon/JpegReader.cpp
-#     src/libCanon/Videogram.cpp
-#     src/libCanon/login.cpp
-#     src/libCanon/VideoManager.cpp
-#     ${IPP_SRC}
-#     src/libCanon/CommManager.cpp
-#     src/libCanon/JpegStreamSaver.cpp
-#     src/libCanon/Datagram.cpp
- )
-# target_link_libraries(${PROJECT_NAME} ${IPP_JPEG} jpeg rt)
-# 
-# IF(USE_IPP MATCHES yes)
-# add_library(${IPP_JPEG}
-#     src/libIppJpeg/decoder.cpp
-#     src/libIppJpeg/decqtbl.cpp
-#     src/libIppJpeg/colorcomp.cpp
-#     src/libIppJpeg/enchtbl.cpp
-#     src/libIppJpeg/encqtbl.cpp
-#     src/libIppJpeg/jpegbase.cpp
-#     src/libIppJpeg/encoder.cpp
-#     src/libIppJpeg/dechtbl.cpp
-# )
-# target_link_libraries(${IPP_JPEG} ${IPP_LIBS})
-# ENDIF(USE_IPP MATCHES yes)
-MESSAGE( STATUS "OpenCV_LIBS:     " ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
+#common commands for building c++ executables and libraries
+add_library(${PROJECT_NAME} src/libCanon/CanonDriver.cpp)
 include_directories(${Boost_INCLUDE_DIRS} include/ ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${CURL_LIBRARIES})
 
@@ -87,6 +45,7 @@ target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} $
 
 add_executable(${PROJECT_NAME}_sub src/node/my_subscriber.cpp)
 target_link_libraries(${PROJECT_NAME}_sub ${Boost_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES})
+
 #creating shared lib
  install(TARGETS ${PROJECT_NAME}
  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
