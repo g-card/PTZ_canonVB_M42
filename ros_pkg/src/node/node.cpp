@@ -1,10 +1,3 @@
-/** \file
-  Copyright (c) CSIRO ICT Robotics Centre
-  \brief  View Video Stream using SDL - faster for Colour video 
-  \author Cedric.Pradalier@csiro.au
-  \warning This program requires SDL
- */
-
 #include <sys/time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,37 +8,29 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <image_transport/image_transport.h>
-
 #include <dynamic_reconfigure/server.h>
 #include <canon_vbm42/CanonParamsConfig.h>
 #include <canon_vbm42/PTZ.h>
 #include <string>
 #include <vector>
-#include "CanonDriver.h"
+#include "libCanon/CanonDriver.h"
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-
+#include "capteurs.h"
 
 
 using namespace std;
 using namespace boost;
-// #include "canon_vbc50i/libCanon/CanonProjection.h"
 using namespace std;
 using namespace cv;
 
-#if 0
-#warning Saving path specific to eddie-ph
-#define RECORDING_DEST "/scratch/stream"
-#else
-#define RECORDING_DEST "/tmp"
-#endif
 
 canon_vbm42::CanonParamsConfig currentConfig;
 boost::recursive_mutex param_mutex;
 CanonDriver * driver = NULL;
-
+/*
 void callback(canon_vbm42::CanonParamsConfig &config, uint32_t level)
 {
     cout<<"In callback"<<endl;
@@ -54,7 +39,7 @@ void callback(canon_vbm42::CanonParamsConfig &config, uint32_t level)
     }
     /*if (config.fps != currentConfig.fps) {
 		driver->setFrameRate(config.fps);
-    }*/
+    }
     bool pos_change = false;
     if (config.pan_ang != currentConfig.pan_ang) {
         pos_change = true;
@@ -73,7 +58,7 @@ void callback(canon_vbm42::CanonParamsConfig &config, uint32_t level)
 		driver->setZoomSpeed(currentConfig.zoom_ang,config.zoom_speed);
 
     if (pos_change) {
-        driver->moveTo(config.pan_ang,config.tilt_ang,config.zoom_ang);
+        //driver->moveTo(config.pan_ang,config.tilt_ang,config.zoom_ang);
 	cout<<"Moving..."<<endl;
     }
 #if 0
@@ -128,20 +113,26 @@ void callback(canon_vbm42::CanonParamsConfig &config, uint32_t level)
 	}
     currentConfig = config;
 #endif
-}
-
-int main(int argc, char* argv[]) 
+}*/
+ main(int argc, char* argv[]) 
 {
 	if (argc < 2) {
 		return 1;
 	}
-
+    bool PSx[25],DxD[13],DxG[13],CPx[11],CPIx[9];
+    	for(int i=0;i<25;i++) PSx[i]=0;
+	for(int i=0;i<13;i++) DxD[i]=0;
+	for(int i=0;i<13;i++) DxG[i]=0;
+	for(int i=0;i<11;i++) CPx[i]=0;
+	for(int i=0;i<9;i++) CPIx[i]=0;
+    bool center=0,p2=0,p1=0,p4=0,p5=0;
     currentConfig.hostname = argv[1];
     currentConfig.subsampling = 0;
     //currentConfig.fps = 10;
-
+    cout<<get_selfpath()<<endl;
     ros::init(argc, argv, "canon_vbm42");
     ros::NodeHandle nh("~");
+    Capteurs Capteurs(nh);
     ros::Publisher ptzpub = nh.advertise<canon_vbm42::PTZ>("ptz", 1);
     image_transport::ImageTransport it(nh);
     image_transport::Publisher image_pub = it.advertise("image",1);
@@ -153,12 +144,14 @@ int main(int argc, char* argv[])
 	    loginf = argv[2];
     }
     double p=11.08,t=-20.07,z=41;
+    float valp,valt,valz;
     /**** Initialising Canon Driver *****/
     CanonDriver canon(currentConfig.hostname.c_str());
     driver = &canon;
 	 if (!canon.connect()) {
 		    return 1;
 	    }
+    driver->moveTo(16.6,-27.49,60.29);//centering
     cout<<"Init done"<<endl;
     const std::string videoStreamAddress = "http://"+lexical_cast <string>(argv[1])+"/-wvhttp-01-/video.cgi?.mjpg"; 
     cv::VideoCapture cap(videoStreamAddress);
@@ -174,44 +167,69 @@ int main(int argc, char* argv[])
     currentConfig.pan_ang = p;
     currentConfig.tilt_ang = t;
     currentConfig.zoom_ang = z;
-    dynamic_reconfigure::Server<canon_vbm42::CanonParamsConfig> srv(param_mutex,nh);
-    dynamic_reconfigure::Server<canon_vbm42::CanonParamsConfig>::CallbackType f = boost::bind(&callback, _1, _2);
-    srv.setCallback(f);
-    srv.updateConfig(currentConfig);
+    ros::Rate loop_rate(5);
+    //dynamic_reconfigure::Server<canon_vbm42::CanonParamsConfig> srv(param_mutex,nh);
+    //dynamic_reconfigure::Server<canon_vbm42::CanonParamsConfig>::CallbackType f = boost::bind(&callback, _1, _2);
+    //srv.setCallback(f);
+    //srv.updateConfig(currentConfig);
     
 
     while (ros::ok()) {
 	    
 	canon_vbm42::PTZ ptz;
 	canon.getCurrentPos(&p,&t,&z);
+	cout<<p<<","<<t<<","<<z<<endl;
 	ptz.pan = p;
 	ptz.tilt = t;
 	ptz.zoom = z;
 	ptzpub.publish(ptz);
-
-	switch(capt)
-	{
-	  case 1: canon.point(1);
-	    break;
-	  case 2: canon.point(2);
-	    break;
-	  case 4: canon.point(4);
-	    break;
-	  case 5: canon.point(5);
-	    break;
-	  default : cout<<"default"<<endl;
-	}
+	Capteurs.Actualiser(PSx,DxD,DxG,CPx,CPIx);
 	cap.read(frame);
+	if(PSx[22])
+	{
+	  driver->point(2,&valp,&valt,&valz);cout<<"Pointing to 2..."<<endl;
+	  driver->moveTo(valp,valt,valz);
+	  center=0;p2=1;
+	}
+	else{
+	  if(PSx[2]){
+	    driver->point(1,&valp,&valt,&valz);cout<<"Pointing to 1..."<<endl;
+	    driver->moveTo(valp,valt,valz);
+	    center=0;p1=1;
+	  }
+	  else{
+	    if(PSx[9]){
+	      driver->point(4,&valp,&valt,&valz);cout<<"Pointing to 4..."<<endl;
+	      driver->moveTo(valp,valt,valz);
+	      center=0;p4=1;
+	    }
+	    else{
+	      if(PSx[15]){
+		driver->point(5,&valp,&valt,&valz);cout<<"Pointing to 5..."<<endl;
+		driver->moveTo(valp,valt,valz);
+		center=0;p5=1;
+	      }
+	      else
+	      {
+		if(center==0 &&( (PSx[24]&&p2)|| (PSx[5]&&p1)|| (PSx[12]&&p4)|| (PSx[17]&&p5))){
+		  driver->moveTo(16.6,-27.49,60.29);//centering
+		  center=1;
+		}
+	      }
+	    }
+	  }
+	}
 	if(!frame.empty()){
 	  //cout<<"envoi"<<endl;
 	    msg = cv_bridge::CvImage(std_msgs::Header(),"bgr8",frame).toImageMsg();
 	    image_pub.publish(msg);
 	}
 	ros::spinOnce();
+	loop_rate.sleep();
 	
     }
 
-	    canon.disconnect();
+    canon.disconnect();
     driver = NULL;
 
     
