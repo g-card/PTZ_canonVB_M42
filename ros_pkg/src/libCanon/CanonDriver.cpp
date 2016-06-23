@@ -7,34 +7,29 @@
 #include <math.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include "canon_vbm42/libCanon/CanonDriver.h"
+#include "libCanon/CanonDriver.h"
 using namespace std;
 using namespace boost;
 
 CanonDriver::CanonDriver(const char * hostname)
 {
 	host = strdup(hostname);
-	connected = false;
-	verbose = 0;
 }
 
 CanonDriver::~CanonDriver() 
 {
 	disconnect();
-	//stopVideoReception();
-	//free(host); host = NULL;
 }
 
 
 
 bool CanonDriver::connect()
 {
-	//cm.setVerboseLevel(verbose);
 	CURL *curl;
 	CURLcode res;
 	std::string readBuffer,url_claim,url_open;
 	vector <string> champs;
-	cam_addr="http://root:camera@"+lexical_cast <string>(host)+"/-wvhttp-01-/";
+	cam_addr="http://etudiant:etudiant@"+lexical_cast <string>(host)+"/-wvhttp-01-/";
 
 	curl = curl_easy_init();
 	//priority=6 pour avoir un acces illimite a la commande
@@ -49,9 +44,8 @@ bool CanonDriver::connect()
 	  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 	  //acces url
 	  res = curl_easy_perform(curl);
-	  //cout<<readBuffer<<endl;	//Debug informations
-	  
-	  
+	  cout<<readBuffer<<endl;	//Debug informations
+	    
 	  //on ne garde que l id de la session
 	  split(champs,readBuffer,is_any_of("\n"));
 	  split(champs,champs[0],is_any_of("="));
@@ -104,10 +98,7 @@ bool CanonDriver::moveTo(float pan, float tilt, float zoom)
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteNone);
     res = curl_easy_perform(curl);
     //modif pan/tilt
-    curl_easy_cleanup(curl);
-  }
-  curl = curl_easy_init();
-  if(curl) {  
+    
     int c=panTo(pan);
     c=tiltTo(tilt);
     c=zoomTo(zoom);
@@ -117,6 +108,7 @@ bool CanonDriver::moveTo(float pan, float tilt, float zoom)
     res = curl_easy_perform(curl);  
   curl_easy_cleanup(curl);
   }
+  
   return 0;
 }
 
@@ -285,11 +277,12 @@ void CanonDriver::getCurrentPos(double* pan,double* tilt,double* zoom)
   *pan =(double) get_pan();
   *tilt = (double)get_tilt();
   *zoom =(double) get_zoom();
-  //printf("At position: %f %f %f\n", cpan,ctilt,czoom);
+  printf("At position: %f %f %f\n", *pan,*tilt,*zoom);
 
 }
 
-void CanonDriver::point(int choix)
+// fonction permettant de pointer vers un poste (postions définies dans pointage.txt)
+void CanonDriver::point(int choix, float *p, float *t, float *z)
 {
   FILE *cmd_file;
   int num_poste = 0;
@@ -310,12 +303,12 @@ void CanonDriver::point(int choix)
     coord[num_poste][3] = zoom;
   }
   if(fclose(cmd_file) == 0)
-    cout << "Param. lu" << endl;
+    cout << "Param. lu" <<*p<<", "<<*t<<", "<<*z<< endl;
 
-  pan = coord[choix][1];
-  tilt = coord[choix][2];
-  zoom = coord[choix][3];
-  bool tag = CanonDriver::moveTo(pan,tilt,zoom);
+  *p = coord[choix][1];
+  *t = coord[choix][2];
+  *z = coord[choix][3];
+  
 }
 
 bool CanonDriver::setPanSpeed(float pan, float speed) 
