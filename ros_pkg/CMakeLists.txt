@@ -35,7 +35,7 @@ catkin_package(
   LIBRARIES ${Boost_LIBRARIES} ${OpenCV_LIBS}
 )  
 #common commands for building c++ executables and libraries
-add_library(${PROJECT_NAME} src/libCanon/CanonDriver.cpp)
+add_library(${PROJECT_NAME} src/libCanon/CanonDriver.cpp src/capteurs.cpp)
 include_directories(${Boost_INCLUDE_DIRS} include/ ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${CURL_LIBRARIES})
 
