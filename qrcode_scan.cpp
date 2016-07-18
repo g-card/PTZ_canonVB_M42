@@ -1,3 +1,7 @@
+/*	
+Inspired from: http://blog.ayoungprogrammer.com/2014/04/real-time-qr-code-bar-code-detection.html/
+You need to install zbar libraries before.
+*/
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <zbar.h>
