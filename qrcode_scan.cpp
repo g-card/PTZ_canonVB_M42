@@ -12,12 +12,10 @@ using namespace cv;
 using namespace std;
 using namespace zbar;
 
-//g++ main.cpp /usr/local/include/ /usr/local/lib/ -lopencv_highgui.2.4.8 -lopencv_core.2.4.8
-
 int main(int argc, char* argv[])
 {
     Mat frame,grey;
-    VideoCapture cap; // open the video camera no. 0
+    VideoCapture cap; // open the video camera 
     const std::string videoStreamAddress = "http://192.168.0.100/-wvhttp-01-/video.cgi?.mjpg";
     
     bool bSuccess;
@@ -28,11 +26,8 @@ int main(int argc, char* argv[])
     }
     
     ImageScanner scanner;  
-    scanner.set_config(ZBAR_NONE, ZBAR_CFG_ENABLE, 1);  
-
-    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-
+    scanner.set_config(ZBAR_NONE, ZBAR_CFG_ENABLE, 1);  //Initializing zbar scanner
+    
     namedWindow("MyVideo",CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
 
     while (1)
