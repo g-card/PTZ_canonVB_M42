@@ -44,7 +44,7 @@ int main(int argc, char** argv )
         wid = frame.size().width;
 	hei = frame.size().height;
         cvtColor(frame, acqImageGray, CV_BGR2GRAY); // image convertion: BGR -> Gray
-	//circle(acqImageGray,Point(1016,106),10,2); utilise pour verif param extrinseques
+	//circle(acqImageGray,Point(1016,106),10,2);//verify extrinsic parameters
 	imshow("imGray", acqImageGray);
 	
 
@@ -96,11 +96,11 @@ int main(int argc, char** argv )
     std::cout<< "Intr: "<<intrinsic<<std::endl;
     std::cout<< "Coef disto: "<<distCoeffs<<std::endl;
 
-    //Calcul des param. extrinseques (rvecs et tvecs)
+    //Extr. calc.(rvecs and tvecs)
     fl=solvePnP(objectPoints[0], imagePoints[0],intrinsic, distCoeffs,rvecs2,tvecs2);
     srvecs=rvecs2;
     stvecs=tvecs2;
-    //Moyenne des param sur les n echantillons
+    //Mean of the param
     for(int i=0;i<objectPoints.size();i++)
     {
 	fl=solvePnP(objectPoints[i], imagePoints[i],intrinsic, distCoeffs,rvecs2,tvecs2);
@@ -108,7 +108,7 @@ int main(int argc, char** argv )
 	stvecs+=tvecs2;
     }
 
-    //Construction de la matrice de rot
+    //Rotation matrix
     Rodrigues(srvecs/objectPoints.size(),R);
     T=stvecs/objectPoints.size();
 
