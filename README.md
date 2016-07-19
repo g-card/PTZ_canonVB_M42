@@ -1,7 +1,9 @@
 # ROS package for PTZ camera from Canon
 
 
-##ROS interface for PTZ camera (this may work with others Canon's cameras) and few programs useful for:
+#Overview
+
+####ROS interface for PTZ camera (this may work with others Canon's cameras) and few programs useful for:
 - reading video from PTZ camera (Canon VB M42);
 - finding parameters of the camera using a chessboard (with OpenCV);
 - sending commands (with http server of the PTZ camera);
