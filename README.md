@@ -1,4 +1,5 @@
-# PTZ_canonVB_M42
+# ROS package for PTZ camera from Canon
+
 
 ##ROS interface for PTZ camera (this may work with others Canon's cameras) and few programs useful for:
 - reading video from PTZ camera (Canon VB M42);
@@ -6,17 +7,25 @@
 - sending commands (with http server of the PTZ camera);
 - doing some video analysis (with OpenCV).
 
+
 # How to run the package
 
-###Required
+
+##Required
   -  [ROS](http://www.ros.org/install/) (Indigo or above);
   -  [OpenCV3](http://wiki.ros.org/opencv3) for ROS (usually included since Jade);
   -  And the [vision_opencv](http://wiki.ros.org/vision_opencv) package to make the link between OpenCV and ROS.
 
-###Download and compile the package
+
+##Download and compile the package
+
+
 You can clone this directory in your [ROS workspace](http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment) (in the `/src` folder).
 After this, you can compile the package with the `catkin_make` command and install it by running `catkin_make install` command.
-###Run the package
+
+
+##Run the package
+
 
 -  In your ~/.bashrc file you can add this line `source /Path_to_your_workspace/install/setup.bash`;
 -  Or you can run `source /Path_to_your_workspace/install/setup.bash` in every command shell where you would like to launch the package.
