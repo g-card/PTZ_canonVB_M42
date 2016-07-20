@@ -37,4 +37,6 @@ Then you can do a `rosrun` of the nodes:
 - `rosrun canon_vbm42 cmd` to launch the command node;
 - `rosrun canon_vbm42 sub` to launch a node showing the video stream.
 
-####Note that you'll need [this package](https://github.com/BrunoDatoMeneses/M1_ISTR/tree/master/Ligne_transitique_MONTRAC) to run the command node (or you can edit the node instead).
+####Note:
+- you'll need [this package](https://github.com/BrunoDatoMeneses/M1_ISTR/tree/master/Ligne_transitique_MONTRAC) to run the command node (or you can edit the node instead);
+- this package is inspired by [this one](https://github.com/ethz-asl/ros-drivers).
