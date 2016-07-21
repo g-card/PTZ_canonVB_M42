@@ -1,4 +1,3 @@
-#include <sys/time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -11,7 +10,6 @@
 #include <dynamic_reconfigure/server.h>
 #include <canon_vbm42/CanonParamsConfig.h>
 #include <canon_vbm42/PTZ.h>
-#include <string>
 #include <vector>
 #include "libCanon/CanonDriver.h"
 #include <opencv2/opencv.hpp>
@@ -26,7 +24,7 @@ using namespace boost;
 using namespace std;
 using namespace cv;
 
-Mat img_out,H,obj;
+Mat img_out,H,obj,img_qr;
 canon_vbm42::PTZ ptz;
 Mat frame;
 int flag=0;
@@ -41,17 +39,25 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     {
       case 1:frame = cv_bridge::toCvCopy(msg, "bgr8")->image;
 	homog_up(1,imread("/home/etudiant/catkin_ws/src/canon_vbm42/src/Poste_1_up.JPG"), frame, &img_out, &H);
+	homog_qr(1,imread("/home/etudiant/catkin_ws/src/canon_vbm42/src/Poste_1.JPG"), frame, &img_qr);
 	homog=0;
 	flag=true;
 	break;
       case 2:frame = cv_bridge::toCvCopy(msg, "bgr8")->image;
 	homog_up(2,imread("/home/etudiant/catkin_ws/src/canon_vbm42/src/Poste_2_up.JPG"), frame, &img_out, &H);
+	homog_qr(2,imread("/home/etudiant/catkin_ws/src/canon_vbm42/src/Poste_2.JPG"), frame, &img_qr);
 	homog=0;
 	flag=true;
 	break;
-      case 4:
+      case 4:frame = cv_bridge::toCvCopy(msg, "bgr8")->image;
+	homog_qr(2,imread("/home/etudiant/catkin_ws/src/canon_vbm42/src/Poste_4.JPG"), frame, &img_qr);
+	homog=0;
+	flag=true;
 	break;
-      case 5:
+      case 5:frame = cv_bridge::toCvCopy(msg, "bgr8")->image;
+	homog_qr(2,imread("/home/etudiant/catkin_ws/src/canon_vbm42/src/Poste_2.JPG"), frame, &img_qr);
+	homog=0;
+	flag=true;
 	break;
       default:
 	break;
@@ -106,7 +112,6 @@ void point(int choix, float *p, float *t, float *z)
     ros::Publisher ptzpub = nh.advertise<canon_vbm42::PTZ>("cmd_ptz", 1);
     image_transport::ImageTransport it(nh);
     image_transport::Subscriber sub = it.subscribe("/canon_vbm42/image", 1, imageCallback);
-    //ros::Subscriber ptzsub = nh.subscribe("/canon_vbm42/ptz_pos",1,ptzCallback);
 
     int capt;
     center=1;
@@ -163,7 +168,14 @@ void point(int choix, float *p, float *t, float *z)
 	}
 	if(flag)
 	{
-	  tot_pieces = pieces_sur_nav(/*&centre_pieces[0],&centre_pieces[1],*/img_out/*,&nb_pieces[0],&nb_pieces[1]*/);
+	  
+	  tot_pieces = pieces_sur_nav(&centre_pieces,img_out,&nb_pieces);
+	  cout<<tot_pieces<<" pieces sur la navette"<<endl;
+	  int nb_qr = read_QR(img_qr);
+	  if(nb_qr==0)
+	  {
+	    cout<<"No QR code found"<<endl;
+	  }
 	  flag=0;
 	}
 	
