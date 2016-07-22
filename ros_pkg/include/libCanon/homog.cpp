@@ -163,11 +163,11 @@ int detect_piece(Scalar low_hsv, Scalar up_hsv,vector<Point2f> *center,Mat src)
       { approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
 	contours_poly2.push_back(contours_poly[i]);
 	boundRect.push_back(minAreaRect( Mat(contours_poly2.back()) ));
-	cout<<boundRect.back().size.area()<<endl<<boundRect.back().size<<endl;
-	if(((boundRect.back().size.area())<350)||
-	  ((boundRect.back().size.area())>920)||
-	    ((boundRect.back().size.height/boundRect.back().size.width)>1.3)||
-	  ((boundRect.back().size.height/boundRect.back().size.width)<0.7))
+	//cout<<boundRect.back().size.area()<<endl<<boundRect.back().size<<((double)boundRect.back().size.height)/(boundRect.back().size.width)<<endl;
+	if(((boundRect.back().size.area())<240)||
+	  ((boundRect.back().size.area())>1100)||
+	    (((double)boundRect.back().size.height/boundRect.back().size.width)>1.5)||
+	  (((double)boundRect.back().size.height/boundRect.back().size.width)<0.6))
 	  {
 	  boundRect.pop_back();
 	  contours_poly2.pop_back();
@@ -193,15 +193,19 @@ int detect_piece(Scalar low_hsv, Scalar up_hsv,vector<Point2f> *center,Mat src)
 
 int pieces_sur_nav(vector<vector<Point2f> >*center,Mat src, vector<int> *nb_pie)
 {
-  Scalar jau_low = Scalar(20, 60, 180);
-  Scalar jau_high = Scalar(50, 180, 255);
-  Scalar or_low = Scalar(0, 70, 180);
+  Scalar jau_low = Scalar(20, 80, 180);
+  Scalar jau_high = Scalar(40, 180, 255);
+  Scalar or_low = Scalar(0, 130, 180);
   Scalar or_high = Scalar(20, 255, 255);
-  Scalar ve_low = Scalar(50, 50, 70);
-  Scalar ve_high = Scalar(80, 255, 255);
-  Scalar bl_low = Scalar(100, 100, 120);
-  Scalar bl_high = Scalar(120, 255, 255);
-  vector<Point2f> center_j,center_o,center_b,center_v;
+  Scalar ve_low = Scalar(40, 65, 70);
+  Scalar ve_high = Scalar(90, 255, 255);
+  Scalar bl_low = Scalar(95, 60, 70);
+  Scalar bl_high = Scalar(130, 255, 255);
+  Scalar ro_low = Scalar(160, 100, 100);
+  Scalar ro_high = Scalar(180, 255, 255);
+  Scalar vi_low = Scalar(140, 60, 70);
+  Scalar vi_high = Scalar(160, 255, 255);
+  vector<Point2f> center_j,center_o,center_b,center_v,center_r,center_vi;
   int sum=0;
   
   nb_pie->push_back(detect_piece(or_low,or_high,&center_o,src));
@@ -212,6 +216,10 @@ int pieces_sur_nav(vector<vector<Point2f> >*center,Mat src, vector<int> *nb_pie)
   cout<<nb_pie->back()<<" piece(s) verte"<<endl; //vert
   nb_pie->push_back(detect_piece(bl_low,bl_high,&center_b,src));
   cout<<nb_pie->back()<<" piece(s) bleue"<<endl; //bleu
+  nb_pie->push_back(detect_piece(ro_low,ro_high,&center_r,src));
+  cout<<nb_pie->back()<<" piece(s) rose"<<endl; //rose
+  nb_pie->push_back(detect_piece(vi_low,vi_high,&center_vi,src));
+  cout<<nb_pie->back()<<" piece(s) violette"<<endl; //violet
   for(vector<int>::iterator it = nb_pie->begin(); it != nb_pie->end(); ++it)
     sum += *it;
   center->push_back(center_o);
@@ -247,8 +255,12 @@ int read_QR(Mat src)
      { 
        approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
        boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-       if(boundRect[i].area()>max_area && (boundRect[i].size().width/boundRect[i].size().height)<1.3)
+       //cout<<boundRect[i].size()<<boundRect[i].area()<<" "<<((double)boundRect[i].size().width/boundRect[i].size().height)<<endl;
+       if(boundRect[i].area()>max_area && 
+	 ((double)boundRect[i].size().width/boundRect[i].size().height)<1.2 && 
+	 ((double)boundRect[i].size().width/boundRect[i].size().height)>0.8)
        {
+	 //cout<<boundRect[i].size()<<boundRect[i].area()<<endl;
 	 max_area=boundRect[i].area();
 	 index_qr=i;
        }
@@ -262,16 +274,19 @@ int read_QR(Mat src)
        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
        drawContours( drawing, contours_poly, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
        rectangle( drawing, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0 );
-     }
-   */  
+     }*/
+    
   Mat cropped = src(boundRect[index_qr]);
 
   /// Show in a window (debug)
-  /*
-  namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-  imshow( "Contours", drawing );
-  */
   
+  /*namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
+  imshow( "Contours", drawing );
+  waitKey(0);
+  namedWindow( "Crop", CV_WINDOW_AUTOSIZE );
+  imshow( "Crop", cropped );
+  
+  waitKey(0);*/
   
   // create a reader
   ImageScanner scanner;
@@ -299,4 +314,3 @@ int read_QR(Mat src)
   }
   return n;
 }
-  
