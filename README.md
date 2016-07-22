@@ -22,7 +22,7 @@
 ###Download and compile the package
 
 
-You can clone this directory in your [ROS workspace](http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment) (in the `/src` folder).
+You can clone (`git clone https://github.com/g-card/PTZ_canonVB_M42/`) this directory in your [ROS workspace](http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment) (in the `/src` folder).
 After this, you can compile the package with the `catkin_make` command and install it by running `catkin_make install` command.
 
 
