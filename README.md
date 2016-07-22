@@ -40,3 +40,8 @@ Then you can do a `rosrun` of the nodes:
 ####Note:
 - you'll need [this package](https://github.com/BrunoDatoMeneses/M1_ISTR/tree/master/Ligne_transitique_MONTRAC) to run the command node (or you can edit the node instead);
 - this package is inspired by [this one](https://github.com/ethz-asl/ros-drivers).
+
+
+####Todo:
+- Send message when the command node finishes the video analysis;
+- Update the configuration of the camera with a service based on dynamic reconfiguration.
