@@ -40,17 +40,22 @@ include_directories(${Boost_INCLUDE_DIRS} include/ ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${CURL_LIBRARIES})
 
 
-add_executable(${PROJECT_NAME}_node src/node/node.cpp)
-target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS})
+add_executable(main src/node/node.cpp)
+target_link_libraries(main ${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(${PROJECT_NAME}_sub src/node/my_subscriber.cpp)
 target_link_libraries(${PROJECT_NAME}_sub ${Boost_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES})
+
+add_executable(cmd src/node/cmd.cpp)
+target_link_libraries(cmd ${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS} ${ZBAR_LIBRARIES}zbar)
 
 #creating shared lib
  install(TARGETS ${PROJECT_NAME}
  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 #creating bin
-install(TARGETS ${PROJECT_NAME}_node
+install(TARGETS main
 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(TARGETS ${PROJECT_NAME}_sub
+RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(TARGETS cmd
 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
