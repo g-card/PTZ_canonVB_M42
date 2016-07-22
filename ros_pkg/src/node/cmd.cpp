@@ -168,7 +168,7 @@ void point(int choix, float *p, float *t, float *z)
 	}
 	if(flag)
 	{
-	  
+	  tot_pieces = 0;
 	  tot_pieces = pieces_sur_nav(&centre_pieces,img_out,&nb_pieces);
 	  cout<<tot_pieces<<" pieces sur la navette"<<endl;
 	  int nb_qr = read_QR(img_qr);
