@@ -33,19 +33,19 @@ int homog_up(int num_poste, Mat img_object,Mat img, Mat* img_out,  Mat *homog)
 	    obj_corners.push_back(Point(455,623));
 	    obj_corners.push_back(Point(797,619));
 	    obj_corners.push_back(Point(795,116));
-	    scene_corners.push_back(Point(468,304-110));//Up left corner
-	    scene_corners.push_back(Point(490,489-110));//Down left corner
-	    scene_corners.push_back(Point(873,482-110));//Down right corner
-	    scene_corners.push_back(Point(836,296-110));//Up right corner
+	    scene_corners.push_back(Point(468,304-110));//top left corner
+	    scene_corners.push_back(Point(490,489-110));//bottom left corner
+	    scene_corners.push_back(Point(873,482-110));//bottom right corner
+	    scene_corners.push_back(Point(836,296-110));//top right corner
 	    break;
-    case 2: obj_corners.push_back(Point(503,126));//Up left corner
-	    obj_corners.push_back(Point(503,550));//Down left corner
-	    obj_corners.push_back(Point(783,552));//Down right corner
-	    obj_corners.push_back(Point(783,122));//Up right corner
-	    scene_corners.push_back(Point(360,383-110));//Up left corner
-	    scene_corners.push_back(Point(617,603-110));//Down left corner
-	    scene_corners.push_back(Point(1070,548-110));//Down right corner
-	    scene_corners.push_back(Point(802,337-110));//Up right corner
+    case 2: obj_corners.push_back(Point(503,126));//top left corner
+	    obj_corners.push_back(Point(503,550));//bottom left corner
+	    obj_corners.push_back(Point(783,552));//bottom right corner
+	    obj_corners.push_back(Point(783,122));//top right corner
+	    scene_corners.push_back(Point(360,383-110));//top left corner
+	    scene_corners.push_back(Point(617,603-110));//bottom left corner
+	    scene_corners.push_back(Point(1070,548-110));//bottom right corner
+	    scene_corners.push_back(Point(802,337-110));//top right corner
 	    break;
     case 4: /*scene_corners.push_back(Point(467,111-45));
 	    scene_corners.push_back(Point(539,470-45));
@@ -66,7 +66,7 @@ int homog_up(int num_poste, Mat img_object,Mat img, Mat* img_out,  Mat *homog)
   warpPerspective(img,*img_out,H.inv()/H.at<double>(2,2),Size(img_object1.cols,img_object1.rows));
   *homog = H.inv();
   imshow( "Homog poste ", *img_out );
-  waitKey(0);
+  //waitKey(0);
   return 0;
 }
 
@@ -149,6 +149,7 @@ int detect_piece(Scalar low_hsv, Scalar up_hsv,vector<Point2f> *center,Mat src)
   erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
   
   imshow("thresh",threshold_output); //debug
+  imwrite("filter.jpg",threshold_output);
   waitKey(0);
   
   /// Find contours
@@ -193,20 +194,22 @@ int detect_piece(Scalar low_hsv, Scalar up_hsv,vector<Point2f> *center,Mat src)
 
 int pieces_sur_nav(vector<vector<Point2f> >*center,Mat src, vector<int> *nb_pie)
 {
-  Scalar jau_low = Scalar(20, 80, 180);
-  Scalar jau_high = Scalar(40, 180, 255);
-  Scalar or_low = Scalar(0, 130, 180);
-  Scalar or_high = Scalar(20, 255, 255);
-  Scalar ve_low = Scalar(40, 65, 70);
+  Scalar jau_low = Scalar(35, 60, 110);
+  Scalar jau_high = Scalar(60, 255, 255);
+  Scalar or_low = Scalar(0, 80, 120);
+  Scalar or_high = Scalar(20, 180, 255);
+  Scalar ve_low = Scalar(60, 100, 170);
   Scalar ve_high = Scalar(90, 255, 255);
-  Scalar bl_low = Scalar(95, 60, 70);
-  Scalar bl_high = Scalar(130, 255, 255);
+  Scalar bl_low = Scalar(80, 110, 190);
+  Scalar bl_high = Scalar(110, 180, 255);
   Scalar ro_low = Scalar(160, 100, 100);
   Scalar ro_high = Scalar(180, 255, 255);
-  Scalar vi_low = Scalar(140, 60, 70);
-  Scalar vi_high = Scalar(160, 255, 255);
+  Scalar vi_low = Scalar(105, 60, 110);
+  Scalar vi_high = Scalar(135, 200, 255);
   vector<Point2f> center_j,center_o,center_b,center_v,center_r,center_vi;
   int sum=0;
+  nb_pie->clear();
+  center->clear();
   
   nb_pie->push_back(detect_piece(or_low,or_high,&center_o,src));
   cout<<nb_pie->back()<<" piece(s) orange"<<endl; //orange
@@ -222,11 +225,24 @@ int pieces_sur_nav(vector<vector<Point2f> >*center,Mat src, vector<int> *nb_pie)
   cout<<nb_pie->back()<<" piece(s) violette"<<endl; //violet
   for(vector<int>::iterator it = nb_pie->begin(); it != nb_pie->end(); ++it)
     sum += *it;
+  
   center->push_back(center_o);
   center->push_back(center_j);
   center->push_back(center_v);
   center->push_back(center_b);
-
+  center->push_back(center_r);
+  center->push_back(center_vi);
+  
+  for(vector<vector<Point2f> >::iterator i = center->begin();i != center->end(); i++)
+  {
+    for(vector<Point2f>::iterator ite = i->begin(); ite != i->end(); ite++)
+      circle(src,*ite,20,Scalar(40, 65, 70),2);
+  }
+  destroyWindow("Homog poste ");
+  imshow("contours",src); //debug
+  imwrite("contours.jpeg",src);
+  waitKey(30);
+  
   return(sum);
   
 }
@@ -280,13 +296,10 @@ int read_QR(Mat src)
 
   /// Show in a window (debug)
   
-  /*namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-  imshow( "Contours", drawing );
-  waitKey(0);
-  namedWindow( "Crop", CV_WINDOW_AUTOSIZE );
   imshow( "Crop", cropped );
+  //imwrite("qr_id.jpg",cropped);
   
-  waitKey(0);*/
+  waitKey(0);
   
   // create a reader
   ImageScanner scanner;
@@ -314,3 +327,4 @@ int read_QR(Mat src)
   }
   return n;
 }
+  
