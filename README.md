@@ -28,7 +28,7 @@ After this, you can compile the package with the `catkin_make` command and insta
 
 ###Run the package
 
-
+-  Run the command `roscore` to launch the **master** node;
 -  In your ~/.bashrc file you can add this line `source /Path_to_your_workspace/install/setup.bash`;
 -  Or you can run `source /Path_to_your_workspace/install/setup.bash` in every command shell where you would like to launch the package.
 
